@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[16]:
+# In[22]:
 
 
 import tensorflow as tf
@@ -18,28 +18,29 @@ x = tf.placeholder('float',[None,784])
 #label of the data
 y = tf.placeholder('float')
 
-def neural_network_model(data, layers = 3, nodes = 500, output_classes = 10):
-    _, dimension = data.shape
-    input_size = dimension.value
-        
-    if layers == 0:
-        output_layer = create_layer_config(input_size, output_classes)
-        return tf.matmul(data, output_layer['weights']) + output_layer['biases']
+def neural_network_model(data, layer_nodes = [500,500,500], output_classes = 10):
+    if layer_nodes == []:
+        return create_layer(data, output_classes)
     else:
-        hidden_layer = create_layer_config(input_size, nodes)
-        layer = create_hidden_layer(hidden_layer, data)
-        return neural_network_model(layer, layers - 1, nodes,output_classes)
+        # using * to unpack tail into next_layer_config
+        # requires Python 3.x
+        # https://stackoverflow.com/questions/10532473/python-head-and-tail-in-one-line
+        nodes,*next_layer_nodes = layer_nodes
+        layer = create_layer(data, nodes)
+        return neural_network_model(tf.nn.relu(layer), next_layer_nodes,output_classes)
 
-def create_hidden_layer(layer_config, inputs):
-    layer = tf.add(tf.matmul(inputs, layer_config['weights']), layer_config['biases'])
-    return tf.nn.relu(layer)
+def create_layer(inputs, nodes):
+    _, dimension = inputs.shape
+    input_size = dimension.value
+    
+    weights = tf.Variable(tf.random_normal([input_size, nodes]))
+    biases = tf.Variable(tf.random_normal([nodes]))
+    
+    return tf.add(tf.matmul(inputs, weights), biases)
 
-def create_layer_config(inputs,nodes):
-    return {'weights': tf.Variable(tf.random_normal([inputs, nodes])),
-                     'biases': tf.Variable(tf.random_normal([nodes]))}
 
 def train_neural_network(x):
-    prediction = neural_network_model(x)
+    prediction = neural_network_model(x, layer_nodes = [600, 400, 200])
     # softmax_cross_entropy_with_logits has been deprecated and it does not accept unnamed parameters
     # https://github.com/tensorflow/tensorflow/blob/v1.5.0/tensorflow/python/ops/nn_ops.py#L1833
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = prediction,labels = y))
