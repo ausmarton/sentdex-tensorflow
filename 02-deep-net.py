@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[7]:
+# In[16]:
 
 
 import tensorflow as tf
@@ -9,11 +9,6 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
-n_nodes_hl1 = 500
-n_nodes_hl2 = 500
-n_nodes_hl3 = 500
-
-n_classes = 10
 batch_size = 100
 
 #height x width
@@ -23,31 +18,25 @@ x = tf.placeholder('float',[None,784])
 #label of the data
 y = tf.placeholder('float')
 
-def neural_network_model(data):
-    hidden_1_layer = {'weights': tf.Variable(tf.random_normal([784, n_nodes_hl1])),
-                     'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
-    
-    hidden_2_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
-                     'biases': tf.Variable(tf.random_normal([n_nodes_hl2]))}
-    
-    hidden_3_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl2, n_nodes_hl3])),
-                     'biases': tf.Variable(tf.random_normal([n_nodes_hl3]))}
-    
-    output_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl3, n_classes])),
-                     'biases': tf.Variable(tf.random_normal([n_classes]))}
-    
-    l1 = tf.add(tf.matmul(data, hidden_1_layer['weights']), hidden_1_layer['biases'])
-    l1 = tf.nn.relu(l1)
-    
-    l2 = tf.add(tf.matmul(l1, hidden_2_layer['weights']), hidden_2_layer['biases'])
-    l2 = tf.nn.relu(l2)
-    
-    l3 = tf.add(tf.matmul(l2, hidden_3_layer['weights']), hidden_3_layer['biases'])
-    l3 = tf.nn.relu(l3)
-    
-    output = tf.matmul(l3, output_layer['weights']) + output_layer['biases']
-    
-    return output
+def neural_network_model(data, layers = 3, nodes = 500, output_classes = 10):
+    _, dimension = data.shape
+    input_size = dimension.value
+        
+    if layers == 0:
+        output_layer = create_layer_config(input_size, output_classes)
+        return tf.matmul(data, output_layer['weights']) + output_layer['biases']
+    else:
+        hidden_layer = create_layer_config(input_size, nodes)
+        layer = create_hidden_layer(hidden_layer, data)
+        return neural_network_model(layer, layers - 1, nodes,output_classes)
+
+def create_hidden_layer(layer_config, inputs):
+    layer = tf.add(tf.matmul(inputs, layer_config['weights']), layer_config['biases'])
+    return tf.nn.relu(layer)
+
+def create_layer_config(inputs,nodes):
+    return {'weights': tf.Variable(tf.random_normal([inputs, nodes])),
+                     'biases': tf.Variable(tf.random_normal([nodes]))}
 
 def train_neural_network(x):
     prediction = neural_network_model(x)
