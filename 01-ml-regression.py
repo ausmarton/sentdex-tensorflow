@@ -7,6 +7,7 @@ from sklearn import preprocessing, cross_validation, svm
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from matplotlib import style
+import pickle
 
 style.use('ggplot')
 
@@ -41,9 +42,17 @@ clf = LinearRegression()
 # SVR can accept a kernel param
 # clf = svm.SVR()
 clf.fit(X_train, y_train)
+
+# Save the classifier
+with open('linearregression.pickle','wb') as f:
+	pickle.dump(clf, f)
+
+# load a saved classifier
+pickle_in = open('linearregression.pickle','rb')
+clf = pickle.load(pickle_in)
+
+
 accuracy = clf.score(X_test, y_test)
-
-
 forecast_set = clf.predict(X_lately)
 print(forecast_set, accuracy, forecast_out)
 df['Forecast'] = np.nan
