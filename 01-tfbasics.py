@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[2]:
-
-
 import tensorflow as tf
 
 x1 = tf.constant(5)
